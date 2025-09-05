@@ -272,33 +272,6 @@ PulseTick/
 - `npm run lint` - Run ESLint
 - `npm run lint:fix` - Fix ESLint errors
 
-## Troubleshooting
-
-### Common Issues
-
-1. **MongoDB Connection Error**
-   - Ensure MongoDB is running
-   - Check the MONGODB_URI in your .env file
-   - For MongoDB Atlas, ensure your IP is whitelisted
-
-2. **Cloudinary Upload Errors**
-   - Verify your Cloudinary credentials
-   - Check that your Cloudinary account has sufficient quota
-
-3. **Socket.io Connection Issues**
-   - Ensure the backend server is running
-   - Check that VITE_SOCKET_URL matches your backend URL
-   - Verify CORS settings in the backend
-
-4. **JWT Token Errors**
-   - Make sure JWT_SECRET and JWT_REFRESH_SECRET are set
-   - Clear browser storage and login again
-
-### Environment Variables Not Loading
-- Ensure .env files are in the correct directories
-- Restart the development servers after changing .env files
-- Check that variable names match exactly (case-sensitive)
-
 ## Contributing
 
 1. Fork the repository
