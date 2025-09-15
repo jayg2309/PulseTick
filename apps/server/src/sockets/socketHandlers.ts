@@ -274,6 +274,8 @@ export class SocketHandlers {
   // Utility method to get online users in a group
   async getOnlineUsersInGroup(groupId: string): Promise<string[]> {
     const sockets = await this.io.in(`group:${groupId}`).fetchSockets();
-    return sockets.map(socket => (socket as AuthenticatedSocket).userId!);
+    return sockets
+      .map(socket => (socket as unknown as AuthenticatedSocket).userId)
+      .filter((userId): userId is string => userId !== undefined);
   }
 }

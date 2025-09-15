@@ -31,17 +31,14 @@ export function formatTimeAgo(date: Date): string {
   return date.toLocaleDateString()
 }
 
-export function formatExpiryTime(expiresAt: Date): string {
-  const now = new Date()
-  const timeLeft = expiresAt.getTime() - now.getTime()
-
-  if (timeLeft <= 0) {
+export function formatExpiryTime(timeLeftMs: number): string {
+  if (timeLeftMs <= 0) {
     return 'Expired'
   }
 
-  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24))
-  const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60))
+  const days = Math.floor(timeLeftMs / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((timeLeftMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutes = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60))
 
   if (days > 0) {
     return `${days}d ${hours}h left`

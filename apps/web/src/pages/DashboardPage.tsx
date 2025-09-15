@@ -15,9 +15,25 @@ import {
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { CreateGroupDialog } from "@/components/groups/CreateGroupDialog";
 import { JoinGroupDialog } from "@/components/groups/JoinGroupDialog";
-import { formatExpiryTime, formatTimeAgo } from "@/lib/utils";
+import { formatExpiryTime } from "@/lib/utils";
+import { ErrorBoundary } from 'react-error-boundary';
 
-export function DashboardPage() {
+function ErrorFallback({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {
+  return (
+    <div role="alert" className="p-4 bg-destructive/10 rounded-lg m-4">
+      <p className="text-destructive font-medium">Something went wrong:</p>
+      <pre className="text-sm mt-2 mb-4 overflow-auto">{error.message}</pre>
+      <button 
+        onClick={resetErrorBoundary}
+        className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90"
+      >
+        Try again
+      </button>
+    </div>
+  );
+}
+
+function DashboardContent() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showJoinGroup, setShowJoinGroup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,15 +43,15 @@ export function DashboardPage() {
   const { groups, isLoading, loadGroups } = useGroupStore();
 
   useEffect(() => {
-    loadGroups();
+    loadGroups().catch(console.error);
   }, [loadGroups]);
 
   const groupList = Object.values(groups);
 
   const filteredGroups = groupList.filter(
     (group: any) =>
-      group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      group.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      group?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      group?.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleGroupClick = (groupId: string) => {
@@ -43,9 +59,21 @@ export function DashboardPage() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -55,7 +83,7 @@ export function DashboardPage() {
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-bold text-primary">PulseTick</h1>
             <div className="hidden md:block text-sm text-muted-foreground">
-              Welcome back, {user?.username}
+              Welcome{user?.username ? `, ${user.username}` : ''}
             </div>
           </div>
 
@@ -101,74 +129,57 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Groups Grid */}
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <LoadingSpinner size="lg" />
-          </div>
-        ) : filteredGroups.length === 0 ? (
+        {/* Groups List */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredGroups.map((group: any) => (
+            <Card
+              key={group._id}
+              className="cursor-pointer hover:bg-accent/50 transition-colors"
+              onClick={() => handleGroupClick(group._id)}
+            >
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg">{group.name}</CardTitle>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Users className="w-4 h-4 mr-1" />
+                    <span>{group.memberCount || 0}</span>
+                  </div>
+                </div>
+                {group.description && (
+                  <CardDescription>{group.description}</CardDescription>
+                )}
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {group.messageCount || 0} messages
+                  </span>
+                  {group.expiresAt && (
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        {formatExpiryTime(new Date(group.expiresAt).getTime() - Date.now())}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {group.lastMessage && (
+                  <div className="mt-2 text-sm text-muted-foreground truncate">
+                    <strong>{group.lastMessage.sender?.username || 'System'}:</strong>{' '}
+                    {group.lastMessage.content}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredGroups.length === 0 && !isLoading && (
           <div className="text-center py-12">
-            <div className="text-muted-foreground mb-4">
-              {searchQuery
-                ? "No groups found matching your search."
-                : "No groups yet."}
-            </div>
-            {!searchQuery && (
-              <div className="space-x-2">
-                <Button onClick={() => setShowCreateGroup(true)}>
-                  Create your first group
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowJoinGroup(true)}
-                >
-                  Join a group
-                </Button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredGroups.map((group) => (
-              <Card
-                key={group.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => handleGroupClick(group.id)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{group.name}</CardTitle>
-                      {group.description && (
-                        <CardDescription className="mt-1">
-                          {group.description}
-                        </CardDescription>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {group.userRole}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center text-muted-foreground">
-                      <Clock className="w-4 h-4 mr-2" />
-                      <span>{formatExpiryTime(new Date(group.expiresAt))}</span>
-                    </div>
-                    {group.memberCount && (
-                      <div className="flex items-center text-muted-foreground">
-                        <Users className="w-4 h-4 mr-2" />
-                        <span>{group.memberCount} members</span>
-                      </div>
-                    )}
-                    <div className="text-xs text-muted-foreground">
-                      Joined {formatTimeAgo(group.joinedAt || group.createdAt)}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            <h3 className="text-lg font-medium">No groups found</h3>
+            <p className="text-muted-foreground mt-2">
+              Create a new group or join an existing one to get started.
+            </p>
           </div>
         )}
       </div>
@@ -178,7 +189,21 @@ export function DashboardPage() {
         open={showCreateGroup}
         onOpenChange={setShowCreateGroup}
       />
-      <JoinGroupDialog open={showJoinGroup} onOpenChange={setShowJoinGroup} />
+      <JoinGroupDialog
+        open={showJoinGroup}
+        onOpenChange={setShowJoinGroup}
+      />
     </div>
+  );
+}
+
+export function DashboardPage() {
+  return (
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onReset={() => window.location.reload()}
+    >
+      <DashboardContent />
+    </ErrorBoundary>
   );
 }
