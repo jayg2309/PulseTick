@@ -22,7 +22,10 @@ const userSchema = new Schema<IUser>(
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email'],
+      match: [
+        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+        'Please enter a valid email',
+      ],
     },
     username: {
       type: String,
@@ -31,7 +34,10 @@ const userSchema = new Schema<IUser>(
       trim: true,
       minlength: 3,
       maxlength: 30,
-      match: [/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'],
+      match: [
+        /^[a-zA-Z0-9_]+$/,
+        'Username can only contain letters, numbers, and underscores',
+      ],
     },
     passwordHash: {
       type: String,
@@ -55,8 +61,8 @@ const userSchema = new Schema<IUser>(
     timestamps: true,
     toJSON: {
       transform: function (doc, ret) {
-        delete ret.passwordHash;
-        delete ret.__v;
+        delete (ret as any).passwordHash;
+        delete (ret as any).__v;
         return ret;
       },
     },
@@ -71,7 +77,7 @@ userSchema.index({ isOnline: 1 });
 // Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('passwordHash')) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(12);
     this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
@@ -82,7 +88,9 @@ userSchema.pre('save', async function (next) {
 });
 
 // Compare password method
-userSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
+userSchema.methods.comparePassword = async function (
+  password: string
+): Promise<boolean> {
   return bcrypt.compare(password, this.passwordHash);
 };
 

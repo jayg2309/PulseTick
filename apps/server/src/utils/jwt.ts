@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import type { SignOptions } from 'jsonwebtoken';
 import { Types } from 'mongoose';
 
 export interface JwtPayload {
@@ -13,19 +14,23 @@ export interface TokenPair {
 }
 
 export class JwtService {
-  private static readonly ACCESS_TOKEN_SECRET = process.env.JWT_SECRET!;
-  private static readonly REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET!;
-  private static readonly ACCESS_TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
-  private static readonly REFRESH_TOKEN_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+  private static readonly ACCESS_TOKEN_SECRET: jwt.Secret = process.env
+    .JWT_SECRET as jwt.Secret;
+  private static readonly REFRESH_TOKEN_SECRET: jwt.Secret = process.env
+    .JWT_REFRESH_SECRET as jwt.Secret;
+  private static readonly ACCESS_TOKEN_EXPIRES_IN =
+    process.env.JWT_EXPIRES_IN || '15m';
+  private static readonly REFRESH_TOKEN_EXPIRES_IN =
+    process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
   static generateTokens(payload: JwtPayload): TokenPair {
     const accessToken = jwt.sign(payload, this.ACCESS_TOKEN_SECRET, {
       expiresIn: this.ACCESS_TOKEN_EXPIRES_IN,
-    });
+    } as SignOptions);
 
     const refreshToken = jwt.sign(payload, this.REFRESH_TOKEN_SECRET, {
       expiresIn: this.REFRESH_TOKEN_EXPIRES_IN,
-    });
+    } as SignOptions);
 
     return { accessToken, refreshToken };
   }
