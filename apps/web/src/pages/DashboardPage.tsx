@@ -1,35 +1,41 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Settings, LogOut, Clock, Users, Search } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
-import { useGroupStore } from '@/store/groupStore';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { CreateGroupDialog } from '@/components/groups/CreateGroupDialog';
-import { JoinGroupDialog } from '@/components/groups/JoinGroupDialog';
-import { formatExpiryTime, formatTimeAgo } from '@/lib/utils';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Settings, LogOut, Clock, Users, Search } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
+import { useGroupStore } from "@/store/groupStore";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/Card";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { CreateGroupDialog } from "@/components/groups/CreateGroupDialog";
+import { JoinGroupDialog } from "@/components/groups/JoinGroupDialog";
+import { formatExpiryTime, formatTimeAgo } from "@/lib/utils";
 
 export function DashboardPage() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showJoinGroup, setShowJoinGroup] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  
+
   const { user, logout } = useAuthStore();
   const { groups, isLoading, loadGroups } = useGroupStore();
 
   useEffect(() => {
-    fetchUserGroups();
-  }, [fetchUserGroups]);
+    loadGroups();
+  }, [loadGroups]);
 
   const groupList = Object.values(groups);
-  const isLoading = Object.values(loading).some(Boolean);
 
-  const filteredGroups = groupList.filter((group: any) =>
-    group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    group.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredGroups = groupList.filter(
+    (group: any) =>
+      group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      group.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleGroupClick = (groupId: string) => {
@@ -38,7 +44,7 @@ export function DashboardPage() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -52,21 +58,17 @@ export function DashboardPage() {
               Welcome back, {user?.username}
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate('/settings')}
+              onClick={() => navigate("/settings")}
             >
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-            >
+            <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </Button>
@@ -107,14 +109,19 @@ export function DashboardPage() {
         ) : filteredGroups.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-muted-foreground mb-4">
-              {searchQuery ? 'No groups found matching your search.' : 'No groups yet.'}
+              {searchQuery
+                ? "No groups found matching your search."
+                : "No groups yet."}
             </div>
             {!searchQuery && (
               <div className="space-x-2">
                 <Button onClick={() => setShowCreateGroup(true)}>
                   Create your first group
                 </Button>
-                <Button variant="outline" onClick={() => setShowJoinGroup(true)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowJoinGroup(true)}
+                >
                   Join a group
                 </Button>
               </div>
@@ -171,10 +178,7 @@ export function DashboardPage() {
         open={showCreateGroup}
         onOpenChange={setShowCreateGroup}
       />
-      <JoinGroupDialog
-        open={showJoinGroup}
-        onOpenChange={setShowJoinGroup}
-      />
+      <JoinGroupDialog open={showJoinGroup} onOpenChange={setShowJoinGroup} />
     </div>
   );
 }
