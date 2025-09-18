@@ -1,5 +1,5 @@
-# PulseTick - Self-Destructing Chat Application
-
+# PulseTick
+- Self-Destructing Chat Application
 A full-stack real-time chat application with self-destructing group chats that expire automatically.
 
 ## Features
